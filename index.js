@@ -58,11 +58,36 @@ app.get('/ManageMyFoods/:email',async(req,res)=>{
     const result = await foodCollection.find({email:req.params.email}).toArray();
     res.send(result)
 })
-// app.get('/ManageMyFoods/:requesrUseremail',async(req,res)=>{
+// app.get('/MyFoodRequest/:requesrUseremail',async(req,res)=>{
 //     console.log(req.params.requesrUseremail)
-//     const result = await foodCollection.find({requesrUseremail:req.params.requesrUseremail}).toArray();
+//     const result = await foodCollection.find({email:req.params.requesrUseremail}).toArray();
 //     res.send(result)
 // })
+app.get('/myFoodRequest/:email',async(req,res)=>{
+    // const user = req.user.email
+    const email= req.params.email
+    // if(user!==email){
+    //     return res.status(403).send({message:'Forbidden Access'})
+    // }
+    const filter={requesrUseremail:email,FoodStatus:"request"}
+    const result = await foodCollection.find(filter).toArray();
+    res.send(result)
+    console.log(email)
+    
+})
+app.get('/AvailableFoods/:email',async(req,res)=>{
+    // const user = req.user.email
+    const email= req.params.email
+    // if(user!==email){
+    //     return res.status(403).send({message:'Forbidden Access'})
+    // }
+    const filter={email:email,FoodStatus:"Available"}
+    const result = await foodCollection.find(filter).toArray();
+    res.send(result)
+    console.log(email)
+    
+})
+
 
 
 app.delete('/delete/:id',async(req,res)=>{
@@ -83,7 +108,8 @@ app.put('/updatePost/:id',async(req,res)=>{
             
             AdditionalNotes:req.body.AdditionalNotes,
             RequestDate:req.body.RequestDate,
-            requesrUseremail:req.body.requesrUseremail
+            requesrUseremail:req.body.requesrUseremail,
+            FoodStatus:req.body.FoodStatus
 
           
         }
