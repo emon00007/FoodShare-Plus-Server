@@ -53,6 +53,72 @@ app.get('/FoodDetails/:id',async(req,res)=>{
     const result = await foodCollection.findOne({_id: new ObjectId(req.params.id)})
     res.send(result)
 })
+app.get('/ManageMyFoods/:email',async(req,res)=>{
+    console.log(req.params.email)
+    const result = await foodCollection.find({email:req.params.email}).toArray();
+    res.send(result)
+})
+// app.get('/ManageMyFoods/:requesrUseremail',async(req,res)=>{
+//     console.log(req.params.requesrUseremail)
+//     const result = await foodCollection.find({requesrUseremail:req.params.requesrUseremail}).toArray();
+//     res.send(result)
+// })
+
+
+app.delete('/delete/:id',async(req,res)=>{
+    const result = await foodCollection.deleteOne({
+        _id: new ObjectId(req.params.id)
+    })
+    console.log(result)
+    res.send(result)
+})
+
+
+app.put('/updatePost/:id',async(req,res)=>{
+    console.log(req.params.id)
+    const query ={_id:new ObjectId(req.params.id)}
+    const option = {upsert:true}
+    const data= {
+        $set:{
+            
+            AdditionalNotes:req.body.AdditionalNotes,
+            RequestDate:req.body.RequestDate,
+            requesrUseremail:req.body.requesrUseremail
+
+          
+        }
+    }
+    const result = await foodCollection.updateOne(query,data,option)
+    console.log(result);
+    res.send(result)
+})
+
+
+app.put('/updatePostManage/:id',async(req,res)=>{
+    console.log(req.params.id)
+    const query ={_id:new ObjectId(req.params.id)}
+    
+    const data= {
+        $set:{
+            
+            AdditionalNotes:req.body.AdditionalNotes,
+            FoodName:req.body.FoodName,
+            FoodQuality:req.body.FoodQuality,
+            PickupLocation:req.body.PickupLocation,
+            FoodStatus:req.body.FoodStatus,
+            FoodQuantity:req.body.FoodQuantity,
+            FoodPhotoUrl:req.body.FoodPhotoUrl,
+            time:req.body.time,
+            date:req.body.date,
+            
+
+          
+        }
+    }
+    const result = await foodCollection.updateOne(query,data)
+    console.log(result);
+    res.send(result)
+})
 
 
 
