@@ -1,15 +1,21 @@
 const express= require('express');
 const cors = require('cors');
+const jwt =require('jsonwebtoken')
 require('dotenv').config()
 const app = express();
+const cookieParser = require('cookie-parser');
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 
 
 // middleware
-app.use(cors());
+app.use(cors({
+    origin:['http://localhost:5173'],
+    credentials : true
+}));
 app.use(express.json());
+app.use(cookieParser())
 
 
 
@@ -24,6 +30,32 @@ const client = new MongoClient(uri, {
   }
 });
 
+
+
+
+const logger = async(req,res,next)=>{
+    console.log('called:',req.host,req.originalUrl)
+    next()
+}
+const verifyToken = async(req,res,next)=>{
+    const token =req.cookies?.token;
+    console.log('xxxxxx',token)
+    if(!token){
+        return res.status(401).send({message:'not authorized'})
+    }
+    jwt.verify(token,process.env.ACCESS_TOKEN_SECRET,(err,decoded)=>{
+        if(err){
+            console.log(err)
+            return res.status(401).send({message:'unauthorized'})
+        }
+        console.log('bbb',decoded)
+        req.user=decoded
+        next()
+    })
+    
+}
+
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -32,7 +64,22 @@ const foodCollection = client.db('foodSharePlus').collection('foodSharePlusSarve
 
 
 
-app.post('/foodSharePlusSarver',async(req,res)=>{
+app.post('/jwt',logger,async(req,res)=>{
+    const user = req.body;
+    console.log(user)
+    const token =jwt.sign(user,process.env.ACCESS_TOKEN_SECRET,{expiresIn:'1h'})
+    res
+    .cookie('token',token,{
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none'
+    })
+    .send({success:true})
+})
+
+
+
+app.post('/foodSharePlusSarver',logger,async(req,res)=>{
     const newFoodSharePlusSarver =req.body 
     console.log(newFoodSharePlusSarver)
     const result =await foodCollection.insertOne(newFoodSharePlusSarver)
@@ -48,40 +95,41 @@ app.get('/foodSharePlusSarver',async(req,res)=>{
 })
 
 
-app.get('/FoodDetails/:id',async(req,res)=>{
+app.get('/FoodDetails/:id',logger,async(req,res)=>{
     console.log(req.params.id)
     const result = await foodCollection.findOne({_id: new ObjectId(req.params.id)})
     res.send(result)
 })
-app.get('/ManageMyFoods/:email',async(req,res)=>{
+app.get('/ManageMyFoods/:email',verifyToken,async(req,res)=>{
     console.log(req.params.email)
     const result = await foodCollection.find({email:req.params.email}).toArray();
     res.send(result)
 })
-// app.get('/MyFoodRequest/:requesrUseremail',async(req,res)=>{
-//     console.log(req.params.requesrUseremail)
-//     const result = await foodCollection.find({email:req.params.requesrUseremail}).toArray();
-//     res.send(result)
-// })
-app.get('/myFoodRequest/:email',async(req,res)=>{
+
+app.get('/myFoodRequest/:email',verifyToken,logger,async(req,res)=>{
     // const user = req.user.email
     const email= req.params.email
-    // if(user!==email){
-    //     return res.status(403).send({message:'Forbidden Access'})
-    // }
+    if(req.user.email!== req.query.email){
+        return res.status(403).send({message:'Forbidden Access'})
+    }
+    let query={};
+    if(req.query?.email){
+        query={email:req.query.email}
+    }
+    console.log(req.cookies.token);
     const filter={requesrUseremail:email,FoodStatus:"request"}
     const result = await foodCollection.find(filter).toArray();
     res.send(result)
     console.log(email)
     
 })
-app.get('/AvailableFoods/:email',async(req,res)=>{
+app.get('/AvailableFoods/',async(req,res)=>{
     // const user = req.user.email
     const email= req.params.email
     // if(user!==email){
     //     return res.status(403).send({message:'Forbidden Access'})
     // }
-    const filter={email:email,FoodStatus:"Available"}
+    const filter={FoodStatus:"Available"}
     const result = await foodCollection.find(filter).toArray();
     res.send(result)
     console.log(email)
