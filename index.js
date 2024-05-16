@@ -11,7 +11,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 // middleware
 app.use(cors({
-    origin:['https://food-share-plus.web.app'],
+    origin:['http://localhost:5173','https://food-share-plus.web.app'],
     credentials : true
 }));
 app.use(express.json());
@@ -39,7 +39,7 @@ const logger = async(req,res,next)=>{
 }
 const verifyToken = async(req,res,next)=>{
     const token =req.cookies?.token;
-    console.log('xxxxxx',token)
+    console.log('jrdcjyt',token)
     if(!token){
         return res.status(401).send({message:'not authorized'})
     }
@@ -53,6 +53,12 @@ const verifyToken = async(req,res,next)=>{
         next()
     })
     
+}
+
+const cookieOptions ={
+    httpOnly:true,
+    secure:process.env.NODE_ENV === "production",
+    sameSite:process.env.NODE_ENV === "production"?"none":"strict"
 }
 
 
@@ -69,11 +75,7 @@ app.post('/jwt',logger,async(req,res)=>{
     console.log(user)
     const token =jwt.sign(user,process.env.ACCESS_TOKEN_SECRET,{expiresIn:'1h'})
     res
-    .cookie('token',token,{
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none'
-    })
+    .cookie('token',token,cookieOptions)
     .send({success:true})
 })
 
@@ -106,16 +108,14 @@ app.get('/ManageMyFoods/:email',async(req,res)=>{
     res.send(result)
 })
 
-app.get('/myFoodRequest/:email',verifyToken,logger,async(req,res)=>{
+app.get('/myFoodRequest/:email',logger,async(req,res)=>{
     // const user = req.user.email
     const email= req.params.email
-    if(req.user.email!== req.query.requesrUseremail){
-        return res.status(403).send({message:'Forbidden Access'})
-    }
-    let query={};
-    if(req.query?.email){
-        query={email:req.query.requesrUseremail}
-    }
+    // if(req.user.email!== req.query.requesrUseremail){
+    //     return res.status(403).send({message:'Forbidden Access'})
+    // }
+    
+   
     console.log(req.cookies.token);
     const filter={requesrUseremail:email,FoodStatus:"request"}
     const result = await foodCollection.find(filter).toArray();
