@@ -100,7 +100,7 @@ app.get('/FoodDetails/:id',logger,async(req,res)=>{
     const result = await foodCollection.findOne({_id: new ObjectId(req.params.id)})
     res.send(result)
 })
-app.get('/ManageMyFoods/:email',verifyToken,async(req,res)=>{
+app.get('/ManageMyFoods/:email',async(req,res)=>{
     console.log(req.params.email)
     const result = await foodCollection.find({email:req.params.email}).toArray();
     res.send(result)
@@ -109,12 +109,12 @@ app.get('/ManageMyFoods/:email',verifyToken,async(req,res)=>{
 app.get('/myFoodRequest/:email',verifyToken,logger,async(req,res)=>{
     // const user = req.user.email
     const email= req.params.email
-    if(req.user.email!== req.query.email){
+    if(req.user.email!== req.query.requesrUseremail){
         return res.status(403).send({message:'Forbidden Access'})
     }
     let query={};
     if(req.query?.email){
-        query={email:req.query.email}
+        query={email:req.query.requesrUseremail}
     }
     console.log(req.cookies.token);
     const filter={requesrUseremail:email,FoodStatus:"request"}
