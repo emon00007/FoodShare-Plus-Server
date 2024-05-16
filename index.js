@@ -11,7 +11,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 // middleware
 app.use(cors({
-    origin:['http://localhost:5173'],
+    origin:['https://food-share-plus.web.app'],
     credentials : true
 }));
 app.use(express.json());
